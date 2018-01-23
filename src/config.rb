@@ -1,0 +1,3 @@
+TGIM_PACK_MAIN_FILE_NAME='pack-main.cc'
+DEFAULT_CONFIG_FILE_NAME='tgim-pack.config.json'
+CXX_FORMATTER='indent'

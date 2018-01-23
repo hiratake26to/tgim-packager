@@ -1,0 +1,3 @@
+#!/bin/sh
+BASE=`dirname $0`
+ruby ${BASE}/src/tgim-pack.rb $@

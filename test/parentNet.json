@@ -1,0 +1,55 @@
+{
+  "name": "parentNet",
+  "node": {
+    "gateway": {
+      "point": { "x": 201, "y": 238 },
+      "netifs": [
+        {
+          "connect": "csma"
+        }
+      ]
+    },
+    "node_0": {
+      "point": { "x": 78, "y": 127 },
+      "netifs": [
+        {
+          "connect": "csma"
+        }
+      ]
+    },
+    "node_1": {
+      "point": { "x": 317, "y": 134 },
+      "netifs": [
+        {
+          "connect": "csma"
+        }
+      ]
+    }
+  },
+  "subnet": {},
+  "channel": {
+    "csma": {
+      "point": { "x": 200, "y": 195 },
+      "type": "Csma",
+      "config": {
+        "DataRate": "100Mbps",
+        "Delay": "1ms",
+        "Address": "192.168.1.0/24"
+      }
+    }
+  },
+  "apps": {
+    "pint_app": {
+      "type": "ping",
+      "args": {
+        "shost": "${node_0}", 
+        "sport": 60000,
+        "dhost": "${node_1}",
+        "dport": 8080,
+        "start": 1,
+        "stop": 10,
+        "rate": "1Mbps"
+      }
+    }
+  }
+}
