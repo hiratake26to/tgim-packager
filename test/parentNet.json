@@ -1,42 +1,17 @@
 {
   "name": "parentNet",
   "node": {
-    "gateway": {
-      "point": { "x": 201, "y": 238 },
-      "netifs": [
-        {
-          "connect": "csma"
-        }
-      ]
-    },
-    "node_0": {
-      "point": { "x": 78, "y": 127 },
-      "netifs": [
-        {
-          "connect": "csma"
-        }
-      ]
-    },
-    "node_1": {
-      "point": { "x": 317, "y": 134 },
-      "netifs": [
-        {
-          "connect": "csma"
-        }
-      ]
+    "gateway": { "netifs": [ { "connect": "csma" } ] },
+    "node_0": { "netifs": [ { "connect": "csma" } ] },
+    "node_1": { "netifs": [ { "connect": "csma" } ] }
+  },
+  "subnet" : {
+    "subnet_0" : { "load" : "subnet0.json",
+      "netifs" : [ { "up" : "gateway", "connect" : "csma" } ]
     }
   },
-  "subnet": {},
   "channel": {
-    "csma": {
-      "point": { "x": 200, "y": 195 },
-      "type": "Csma",
-      "config": {
-        "DataRate": "100Mbps",
-        "Delay": "1ms",
-        "Address": "192.168.1.0/24"
-      }
-    }
+    "csma": { "type": "Csma", "config": { "DataRate": "100Mbps", "Delay": "1ms" } }
   },
   "apps": {
     "pint_app": {

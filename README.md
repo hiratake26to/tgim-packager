@@ -1,5 +1,9 @@
 # tgim-packager
 
+## Rule
+
+Generator execute path is the same as Entry-file path.
+
 ## Usage
 
 1. Run `./tgim-pack init` command, it is generating `tgim-pack.config.json`

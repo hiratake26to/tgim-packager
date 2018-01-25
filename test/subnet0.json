@@ -1,0 +1,11 @@
+{
+  "name" : "Subnet0",
+  "channel" : {
+    "csma" : { "type" : "Csma", "config" : { "DataRate" : "100Mbps", "Delay" : "1ms" } }
+  },
+  "node" : {
+    "gateway" : { "netifs" : [ { "connect" : "csma" } ] },
+    "node_0" : { "netifs" : [ { "connect" : "csma" } ] },
+    "node_1" : { "netifs" : [ { "connect" : "csma" } ] }
+  }
+}
