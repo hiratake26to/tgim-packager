@@ -17,7 +17,7 @@
 #   - set logging (optional)
 #   - simulator ready
 #   - simulator start
-#   - sumulator destroy
+#   - simulator destroy
 
 require './src/config'
 require './src/packager'
