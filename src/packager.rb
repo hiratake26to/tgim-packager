@@ -12,8 +12,14 @@ def loadConf(filepath)
       exit(1)
     end
     if !File.exist?(hash["output"]) then
-      STDERR.puts 'output error'
-      exit(1)
+      STDERR.puts 'No output directory'
+      begin
+        Dir.mkdir(hash["output"])
+      rescue
+        STDERR.puts 'Could not create new directory'
+        exit(1)
+      end
+      STDERR.puts 'Created new directory'
     end
     if !File.exist?(hash["loader"]) then
       STDERR.puts 'loader error'
