@@ -2,6 +2,11 @@
 
 ## Rule
 
+Config file default is `tgim-pack.config.json`.
+Directory with the config file is referred to as 'working directory'.
+
+Searching path for Entry-file is the same as working directory.
+
 Generator execute path is the same as Entry-file path.
 
 ## Usage

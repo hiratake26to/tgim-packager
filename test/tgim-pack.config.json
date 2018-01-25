@@ -1,5 +1,5 @@
 {
-  "entry": "test/parentNet.json",
+  "entry": "parentNet.json",
   "output": "./output/",
   "loader": "/home/ubuntu-zioi/local/src/tgim-generator/tgim-ns3",
   "target": "ns-3",

@@ -19,8 +19,8 @@
 #   - simulator start
 #   - simulator destroy
 
-require './src/config'
-require './src/packager'
+require 'config'
+require 'packager'
 
 require 'thor'
 class TgimPackCli < Thor

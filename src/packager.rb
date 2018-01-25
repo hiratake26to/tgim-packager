@@ -1,5 +1,5 @@
-require './src/config'
-require './src/gen-main.rb'
+require 'config'
+require 'gen-main.rb'
 require 'json'
 
 def loadConf(filepath)
@@ -29,6 +29,15 @@ def loadConf(filepath)
 end
 
 def package(config_file)
+  config_file = config_file ? config_file : DEFAULT_CONFIG_FILE_NAME
+  Dir.chdir(File.dirname(config_file)) {
+    puts "[Pack] Enter to '#{Dir.pwd}'"
+    process(File.basename(config_file))
+    puts "[Pack] Exit from '#{Dir.pwd}'"
+  }
+end
+
+def process(config_file)
   config_file = config_file ? config_file : DEFAULT_CONFIG_FILE_NAME
 
   # additional CXX headers
