@@ -13,7 +13,7 @@ Generator execute path is the same as Entry-file path.
 ## Dependencies
 
 - indent (C++ formatter)
-  you can chenge this from `./src/config.rb`
+  you can change this from `./src/config.rb`
 
 LICENSE
 -------
