@@ -34,18 +34,22 @@ def loadConf(filepath)
   }
 end
 
-def package(config_file)
-  config_file = config_file ? config_file : DEFAULT_CONFIG_FILE_NAME
-  Dir.chdir(File.dirname(config_file)) {
+def package(conf_file_path)
+  conf_file_path = conf_file_path ? conf_file_path : DEFAULT_CONFIG_FILE_NAME
+
+  if !File.exist?(conf_file_path) then
+    STDERR.puts "No #{conf_file_path} found."
+    exit(0)
+  end
+
+  Dir.chdir(File.dirname(conf_file_path)) {
     puts "[Pack] Enter to '#{Dir.pwd}'"
-    process(File.basename(config_file))
+    process(File.basename(conf_file_path))
     puts "[Pack] Exit from '#{Dir.pwd}'"
   }
 end
 
 def process(config_file)
-  config_file = config_file ? config_file : DEFAULT_CONFIG_FILE_NAME
-
   # additional CXX headers
   headers = []
 
@@ -54,7 +58,13 @@ def process(config_file)
     STDERR.puts "No #{config_file} found."
     exit(0)
   end
-  hash = loadConf(config_file)
+  
+  begin
+    hash = loadConf(config_file)
+  rescue
+    STDERR.puts "[ERR] Could not parse from config file to JSON!"
+    exit(1)
+  end
 
   # run generator, and get output files(.hpp)
   # generator --output-dir dir --template-path ... --appmodel-path ... in_files ...
@@ -70,10 +80,13 @@ def process(config_file)
   # cp it to output directory
   require 'fileutils'
   # include UDA header in main.cxx
+  puts "==> Searching..."
   uda_list.each{|f|
+    puts "Find in #{f}"
     FileUtils.cp f, hash["output"]
     headers.push File.basename(f)
   }
+  puts "OK"
 
 
   puts '[Pack] Run generator'
@@ -95,7 +108,7 @@ def process(config_file)
   File.open(hash["entry"]) { |f|
     jsubnet = JSON.load(f)['subnet']
     jsubnet.each{|subnet_name,val|
-      puts '[Pack] Find subnet: ' + subnet_name
+      puts 'Find subnet: ' + subnet_name
       # generate subnet
       if ( !system( generator_cmd.call(val['load'], subnet_name) )) then
           STDERR.puts '[ERR] Load Error!'
