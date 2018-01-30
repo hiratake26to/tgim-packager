@@ -21,6 +21,7 @@
 
 require 'config'
 require 'packager'
+require 'json'
 
 require 'thor'
 class TgimPackCli < Thor
@@ -51,6 +52,46 @@ class TgimPackCli < Thor
   def pack(file=false)
     package file
   end
+
+  # configure
+  desc 'config <key> [<value>]', 'Update config'
+  def config(key, value=nil)
+    if !File.exist?(DEFAULT_CONFIG_FILE_NAME) then
+      puts "Package config file not exists."
+      exit(0)
+    end
+
+    if (value) then
+      jconf = nil
+      File.open(DEFAULT_CONFIG_FILE_NAME, "r") { |f|
+        jconf = JSON.load(f)
+      }
+
+      c = jconf
+
+      a = key.split('.')
+      a.each {|key|
+        if !c[key].is_a? Hash then
+          c[key] = {}
+        end
+        c = c[key]
+      }
+
+      eval('jconf'+ '["'+a.join('"]["')+'"]' + " = '#{value}'")
+
+      File.open(DEFAULT_CONFIG_FILE_NAME, "w") { |f|
+        f.puts JSON.pretty_generate(jconf)
+      }
+    else
+      File.open(DEFAULT_CONFIG_FILE_NAME, "r") { |f|
+        jconf = JSON.load(f)
+        puts jconf[key]
+      }
+    end
+
+    exit(0)
+  end
+
 end
 
 TgimPackCli.start(ARGV)
