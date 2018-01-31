@@ -39,7 +39,7 @@ def package(conf_file_path)
 
   if !File.exist?(conf_file_path) then
     STDERR.puts "No #{conf_file_path} found."
-    exit(0)
+    exit(1)
   end
 
   Dir.chdir(File.dirname(conf_file_path)) {
@@ -128,7 +128,9 @@ def process(config_file)
 
   efg = EntryFileGenerator.new
   puts '==> Configure'
-  efg.parse(:SIMOPT, hash['simulator'])
+  if ( !!hash['simulator'] ) then
+    efg.parse(:SIMOPT, hash['simulator'])
+  end
   puts 'OK'
   puts '==> Generating'
   efg.gen(hash['output'] + TGIM_PACK_MAIN_FILE_NAME,

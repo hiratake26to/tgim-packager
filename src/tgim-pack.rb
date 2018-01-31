@@ -30,7 +30,7 @@ class TgimPackCli < Thor
   def init
     if File.exist?(DEFAULT_CONFIG_FILE_NAME) then
       puts "Package config file already exists."
-      exit(0)
+      exit(1)
     end
     #STDERR.puts('Could not create new file.')
     # TODO: Add interrupt mode
@@ -58,7 +58,7 @@ class TgimPackCli < Thor
   def config(key, value=nil)
     if !File.exist?(DEFAULT_CONFIG_FILE_NAME) then
       puts "Package config file not exists."
-      exit(0)
+      exit(1)
     end
 
     if (value) then
