@@ -2,13 +2,27 @@ require 'config'
 require 'gen-main.rb'
 require 'json'
 
+def getNetName(filepath)
+  File.open(filepath) { |f|
+    hash = JSON.load(f)
+
+    # json format check
+    if !hash["name"] then
+      STDERR.puts '[ERR] entry network name is empty'
+      exit(1)
+    end
+
+    return hash["name"]
+  }
+end
+
 def loadConf(filepath)
   File.open(filepath) { |f|
     hash = JSON.load(f)
 
     # json format check
     if !File.exist?(hash["entry"]) then
-      STDERR.puts 'entry error'
+      STDERR.puts '[ERR] entry not found'
       exit(1)
     end
     if !File.exist?(hash["output"]) then
@@ -16,17 +30,18 @@ def loadConf(filepath)
       begin
         Dir.mkdir(hash["output"])
       rescue
-        STDERR.puts 'Could not create new directory'
+        STDERR.puts '[ERR] Could not create new directory'
         exit(1)
       end
       STDERR.puts 'Created new directory'
     end
-    if !File.exist?(hash["loader"]) then
-      STDERR.puts 'loader error'
+    `type #{hash["loader"]} 2>/dev/null`
+    if $?.exitstatus != 0 then
+      STDERR.puts '[ERR] loader not found'
       exit(1)
     end
     if hash["target"] != 'ns-3' then
-      STDERR.puts 'target error'
+      STDERR.puts '[ERR] target error'
       exit(1)
     end
 
@@ -133,9 +148,9 @@ def process(config_file)
   end
   puts 'OK'
   puts '==> Generating'
-  efg.gen(hash['output'] + TGIM_PACK_MAIN_FILE_NAME,
+  efg.gen(hash['output'] + '/' + TGIM_PACK_MAIN_FILE_NAME,
           hash['entry'],
-          File.basename(hash['entry'], '.json'),
+          getNetName(hash['entry']),
           headers: headers)
   puts 'OK'
 

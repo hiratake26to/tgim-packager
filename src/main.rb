@@ -22,6 +22,7 @@
 require 'config'
 require 'packager'
 require 'json'
+require 'fileutils'
 
 require 'thor'
 class TgimPackCli < Thor
@@ -34,6 +35,7 @@ class TgimPackCli < Thor
     end
     #STDERR.puts('Could not create new file.')
     # TODO: Add interrupt mode
+    puts("Writing new package config file to ./#{DEFAULT_CONFIG_FILE_NAME}.")
     File.open(DEFAULT_CONFIG_FILE_NAME, "w") do |f|
       f.puts <<~JSON
         {
@@ -44,7 +46,11 @@ class TgimPackCli < Thor
         }
       JSON
     end
-    puts("Writing new package config file to ./#{DEFAULT_CONFIG_FILE_NAME}.")
+
+    puts("Copying module files to ./module.")
+    FileUtils.cp_r(MODULE_PATH, "./module")
+
+    puts("Success!")
     exit(0)
   end
 

@@ -1,7 +1,7 @@
 {
   "entry": "parentNet.json",
   "output": "./output/",
-  "loader": "/home/ubuntu-zioi/local/src/tgim-generator/tgim-ns3",
+  "loader": "/home/ubuntu-zioi/local/src/tgim-generator/bin/tgim-generator",
   "target": "ns-3",
 
   "simulator": {

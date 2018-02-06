@@ -1,5 +1,0 @@
-#!/bin/sh
-exec ruby -S -x $0 "$@"
-#! ruby
-$LOAD_PATH.push("#{File.dirname $0}/src")
-require 'tgim-pack'
