@@ -26,8 +26,8 @@ require 'fileutils'
 
 require 'thor'
 class TgimPackCli < Thor
-  desc 'init', 'Create package config file'
-
+  desc 'init [options]', 'Create package config file'
+  method_option :i, :type => :boolean, :desc => "interact mode"
   def init
     if File.exist?(DEFAULT_CONFIG_FILE_NAME) then
       puts "Package config file already exists."
@@ -47,11 +47,38 @@ class TgimPackCli < Thor
       JSON
     end
 
+    # interact mode
+    self.interact if options[:i]
+
     puts("Copying module files to ./module.")
     FileUtils.cp_r(MODULE_PATH, "./module")
 
     puts("Success!")
-    exit(0)
+  end
+
+  desc 'interact', 'Interact mode, create package config file'
+  def interact
+    require 'readline'
+    stty_save = `stty -g`.chomp
+    while true
+      buf = Readline.readline("Entry: ").strip
+      if buf.empty? then 
+        puts "Error, Entry must be specified."
+      else
+        break
+      end
+    end
+    self.config("entry", buf.empty?? "./output" : buf)
+
+    buf = Readline.readline("Output (default=\"./output\"): ").strip
+    self.config("output", buf.empty?? "./output" : buf)
+    buf = Readline.readline("Loader (default=\"tgim-generator\"): ").strip
+    self.config("loader", buf.empty?? "tgim-generator" : buf)
+    buf = Readline.readline("Target (default=\"ns-3\"): ").strip
+    self.config("target", buf.empty?? "ns-3" : buf)
+  rescue Interrupt
+    system("stty", stty_save)
+    exit
   end
 
   desc 'pack [<config.json>]', 'Package according to the configuration file'
@@ -94,8 +121,6 @@ class TgimPackCli < Thor
         puts jconf[key]
       }
     end
-
-    exit(0)
   end
 
 end
