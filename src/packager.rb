@@ -1,6 +1,10 @@
 require 'config'
 require 'gen-main.rb'
 require 'json'
+require 'open3'
+
+# nil safety, for read file or JSON object.
+def nil.method_missing(*_); nil; end
 
 def getNetName(filepath)
   File.open(filepath) { |f|
@@ -103,6 +107,22 @@ def process(config_file)
   }
   puts "OK"
 
+  # [NOTE] module/mod is pilot implementation
+  puts '[Pack] Searching mod files'
+  #
+  # list ./module/uda/
+  mod_list = Dir.glob("./module/mod/*")
+  # cp it to output directory
+  #require 'fileutils'
+  # include include header in main.cxx
+  puts "==> Searching..."
+  mod_list.each{|f|
+    puts "Find in #{f}"
+    FileUtils.cp f, hash["output"]
+    headers.push File.basename(f)
+  }
+  puts "OK"
+
 
   puts '[Pack] Run generator'
 
@@ -121,11 +141,14 @@ def process(config_file)
   puts '[Pack] Search entry-net to find subnet'
   # resolve subnet files from entry file
   File.open(hash["entry"]) { |f|
-    jsubnet = JSON.load(f)['subnet']
+    jsubnet = p JSON.load(f)['subnet']
+    puts "if subnet is nil, skip parse subnet"
     jsubnet.each{|subnet_name,val|
       puts 'Find subnet: ' + subnet_name
       # generate subnet
-      if ( !system( generator_cmd.call(val['load'], subnet_name) )) then
+      out, stat = Open3.capture2e( generator_cmd.call(val['load'], subnet_name) )
+      puts out
+      if ( stat != 0 ) then
           STDERR.puts '[ERR] Load Error!'
           exit(1)
       end
@@ -134,9 +157,13 @@ def process(config_file)
   }
 
   puts '[Pack] Generate entry-net'
-  if ( !system( generator_cmd.call(entry) )) then
-      STDERR.puts '[ERR] Load Error!'
-      exit(1)
+  begin
+    out, stat = Open3.capture2e( generator_cmd.call(entry) )
+    puts out
+    if ( stat != 0 ) then
+        STDERR.puts '[ERR] Load Error!'
+        exit(1)
+    end
   end
 
   puts "[Pack] Generate #{TGIM_PACK_MAIN_FILE_NAME}"

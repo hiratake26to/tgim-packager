@@ -119,6 +119,9 @@ public:
   void Set_dport(int port) {
     this->mport = port;
   }
+  void Set_dport(std::string port) {
+    Set_dport(std::stoi(port));
+  }
   void Set_rate(std::string) {
     // nothing
   }
@@ -128,14 +131,29 @@ public:
   void Set_sport(int port) {
     this->nport = port;
   }
+  void Set_sport(std::string port) {
+    Set_sport(std::stoi(port));
+  }
   void Set_start(int t) {
     this->sim_start = t;
+  }
+  void Set_start(std::string t) {
+    Set_start(std::stoi(t));
   }
   void Set_stop(int t) {
     this->sim_stop = t;
   }
+  void Set_stop(std::string t) {
+    Set_stop(std::stoi(t));
+  }
   void install() {
-    Ipv4InterfaceAddress madr = m->GetObject<Ipv4>()->GetAddress(1,0);
+    //Ipv4InterfaceAddress madr = m->GetObject<Ipv4>()->GetAddress(1,0);
+    Ipv4InterfaceAddress madr;
+    madr = m->GetObject<Ipv4>()->GetAddress(1,0);
+    NS_LOG_INFO (madr.GetLocal());
+    //madr = m->GetObject<Ipv4>()->GetAddress(2,0);
+    //NS_LOG_INFO (madr.GetLocal());
+
     Address remoteAddr (InetSocketAddress (madr.GetLocal(), mport));
 
     Ptr<Socket> socket = Socket::CreateSocket (n,
