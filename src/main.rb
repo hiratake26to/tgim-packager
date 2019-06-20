@@ -23,6 +23,7 @@ require 'config'
 require 'packager'
 require 'json'
 require 'fileutils'
+require 'util'
 
 require 'thor'
 class TgimPackCli < Thor
@@ -121,6 +122,25 @@ class TgimPackCli < Thor
         puts jconf[key]
       }
     end
+  end
+
+  desc 'clean', 'clean output directory'
+  def clean()
+    if !File.exist?(DEFAULT_CONFIG_FILE_NAME) then
+      puts "Package config file not exists."
+      exit(1)
+    end
+    
+    # get output field from DEFAULT_CONFIG_FILE
+    PackUtil.getValue(DEFAULT_CONFIG_FILE_NAME, 'output').bind {|val|
+      if !File.exist?(val) then
+        puts "no exists output: #{val}"
+        next false
+      end
+      puts "clean: #{val}"
+      FileUtils.rm_rf(val)
+      next true
+    }
   end
 
 end
