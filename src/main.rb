@@ -27,6 +27,11 @@ require 'util'
 
 require 'thor'
 class TgimPackCli < Thor
+  desc 'version', 'display tgim-pack version'
+  def version
+    puts TGIM_PACK_VERSION
+  end
+
   desc 'init [options]', 'Create package config file'
   method_option :i, :type => :boolean, :desc => "interact mode"
   def init
