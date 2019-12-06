@@ -130,12 +130,17 @@ def process(config_file)
   generator_cmd = lambda {|file, outname=file|
     flags = '--template-path "/home/ubuntu-zioi/local/src/tgim-generator/resource/ns3template-cxx.json"' +
             ' --appmodel-path "/home/ubuntu-zioi/local/src/tgim-generator/src/model/application.json"'
-    return <<~SH
-      cd #{generator_wd} && \
-      #{loader} #{flags} \
-      -o \"#{File.absolute_path(File.join(output,File.basename(outname, ".json")+".hpp"))}\" \
+    return %W(
+      cd #{generator_wd} &&
+      #{loader} #{flags}
+      -o \"#{File.absolute_path(File.join(output,File.basename(outname, ".json")+".hpp"))}\"
       #{File.basename(file)}
-    SH
+    ).join(' ')
+  }
+
+  cmdEval = lambda{|cmd|
+    puts cmd
+    return Open3.capture2e(cmd)
   }
 
   puts '[Pack] Search entry-net to find subnet'
@@ -146,7 +151,7 @@ def process(config_file)
     jsubnet.each{|subnet_name,val|
       puts 'Find subnet: ' + subnet_name
       # generate subnet
-      out, stat = Open3.capture2e( generator_cmd.call(val['load'], subnet_name) )
+      out, stat = cmdEval.call(generator_cmd.call(val['load'], subnet_name))
       puts out
       if ( stat != 0 ) then
           STDERR.puts '[ERR] Load Error!'
@@ -158,7 +163,7 @@ def process(config_file)
 
   puts '[Pack] Generate entry-net'
   begin
-    out, stat = Open3.capture2e( generator_cmd.call(entry) )
+    out, stat = cmdEval.call(generator_cmd.call(entry))
     puts out
     if ( stat != 0 ) then
         STDERR.puts '[ERR] Load Error!'

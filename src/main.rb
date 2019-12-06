@@ -32,6 +32,121 @@ class TgimPackCli < Thor
     puts TGIM_PACK_VERSION
   end
 
+  desc 'new <path>', 'Create new projcet into path, and current directory set to ns-3 root directory'
+  method_option :ns3dir, :type => :string, :desc => "ns-3 directory root", :default => Dir.pwd
+  def new(path)
+    waff='waff'
+    ns3dir=options[:ns3dir]
+
+    if File.exist?(path) then
+      puts "Already exists file to the path, failed!"
+      exit(1)
+    end
+
+    # create tempdir
+    orgdir = Dir.pwd
+    require "tmpdir"
+    tmpdir = Dir.mktmpdir
+    puts "temporary: #{tmpdir}"
+    Dir.chdir(tmpdir)
+
+    puts "Create project"
+
+    puts "==> Generate: #{path}/#{waff}"
+    File.open(waff, 'w') do |f|
+      f.puts <<~SHELL
+        #!/bin/sh
+
+        NS3DIR="#{ns3dir}"
+
+        CWD="$PWD/build"
+        cd $NS3DIR > /dev/null
+        ./waf --cwd="$CWD" $*
+        cd - > /dev/null
+      SHELL
+    end
+    FileUtils.chmod('u+x', waff)
+
+    puts "==> Generate: #{path}/src/"
+    Dir.mkdir('src')
+
+    puts "==> Generate: #{path}/src/main.py"
+    begin
+      Dir.chdir('src')
+
+      # create sample box
+      File.open('main.py', 'w') do |f|
+        f.puts <<~PYTHON
+          from tgimbox import *
+
+          # Topology:
+          #
+          # term0      sw                term0  
+          #┌──────┐   ┌─────────────┐   ┌──────┐
+          #│  port┠───┨port0   port1┠───┨  port│
+          #└──────┘   └─────────────┘   └──────┘
+          #
+          # Application schedule:
+          # 
+          # term0:
+          #   SimReady -> Aft At 1-second -> Ping to term1
+          #
+          # term1:
+          #   SimReady -> Sink
+
+          ## create box
+          term0 = BasicTerminal.Fork("term0").SetPoint(Point(0,0))
+          term1 = BasicTerminal.Fork("term1").SetPoint(Point(10,0))
+          sw = GenSwitch(2).Fork("sw").SetPoint(Point(5,0))
+
+          ## connect
+          term0.ConnectPort("port", sw, "port0")
+          term1.ConnectPort("port", sw, "port1")
+
+          ## schedule
+          (term0.Sdl()
+            .At(Sig("SimReady")).Aft().At(1)
+            .Do("Ping", {"dhost": "${_Bterm1_Nn0}", "dport": 8080})
+            )
+          (term1.Sdl()
+            .At(Sig("SimReady"))
+            .Do("Sink", {"port": 8080})
+            )
+
+          ## build
+          Builder.AddBox([term0, term1, sw])
+          result = Builder.Build()
+          with open('tgim-main.json', 'w') as f:
+            f.write(Builder.Build())
+        PYTHON
+      end
+      
+
+      Dir.chdir('../')
+    end
+
+    puts "==> Generate: #{path}/build/"
+    Dir.mkdir('build')
+
+    puts "==> tgim-pack init"
+    self.init
+
+    puts "==> tgim-pack config"
+    self.config 'project', path
+    self.config 'entry',  'tgim-main.json'
+    self.config 'output', 'build'
+    self.config 'loader', 'tgim-generator'
+    self.config 'target', 'ns-3'
+    self.config 'target-dir', ns3dir
+
+    puts "==> move file"
+    Dir.chdir(orgdir)
+    puts "#{tmpdir} -> #{path}"
+    FileUtils.mv(tmpdir, path)
+
+    puts "\nFinish!"
+  end
+
   desc 'init [options]', 'Create package config file'
   method_option :i, :type => :boolean, :desc => "interact mode"
   def init
@@ -61,6 +176,43 @@ class TgimPackCli < Thor
 
     puts("Success!")
   end
+
+  desc 'build', 'Build ns-3 script'
+  def build
+    puts "===> python3 src/main.py"
+    o,e,s = Open3.capture3("python3 src/main.py")
+    puts o,e
+    if (not s.success?) then
+      puts "ERROR: src/main.py execution failed!"
+      exit(1)
+    end
+    puts "===> tgim-pack pack"
+    self.pack
+  end
+
+  desc 'run', 'Run ns-3 script'
+  def run_
+    puts "===> build"
+    self.build
+    project = self.config('project')
+    ns3dir = self.config('target-dir')
+    ns3scratch = ns3dir + '/scratch'
+
+    puts "===> files copy"
+    FileUtils.mkdir_p("#{ns3scratch}/#{project}")
+    files = Dir.glob("build/*")
+    p files ,"#{ns3scratch}/#{project}"
+    FileUtils.cp(files, "#{ns3scratch}/#{project}")
+    
+    puts "===> waff"
+    o,e,s = Open3.capture3("./waff --run \"#{project}\" --vis")
+    puts o,e
+    if (not s.success?) then
+      puts "ERROR!"
+      exit(1)
+    end
+  end
+  map "run" => "run_" #refer to: http://secret-garden.hatenablog.com/entry/2015/05/27/193313
 
   desc 'interact', 'Interact mode, create package config file'
   def interact
@@ -95,6 +247,7 @@ class TgimPackCli < Thor
   # configure
   desc 'config <key> [<value>]', 'Update config'
   def config(key, value=nil)
+    ret = ""
     if !File.exist?(DEFAULT_CONFIG_FILE_NAME) then
       puts "Package config file not exists."
       exit(1)
@@ -124,9 +277,12 @@ class TgimPackCli < Thor
     else
       File.open(DEFAULT_CONFIG_FILE_NAME, "r") { |f|
         jconf = JSON.load(f)
-        puts jconf[key]
+        ret = jconf[key]
+        puts ret
       }
     end
+
+    return ret
   end
 
   desc 'clean', 'clean output directory'

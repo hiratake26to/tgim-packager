@@ -36,7 +36,7 @@ void allocateWaypoint(Node &node, double sec, double x, double y, double z) {
 #endif
 
 NetDeviceContainer WifiApStaInstall(WifiHelper wifi, NodeContainer ap, NodeContainer stas) {
-  NetDeviceContainer staDevs;
+  NetDeviceContainer netDevs;
 
   WifiMacHelper wifiMac;
   YansWifiPhyHelper wifiPhy = YansWifiPhyHelper::Default();
@@ -45,19 +45,19 @@ NetDeviceContainer WifiApStaInstall(WifiHelper wifi, NodeContainer ap, NodeConta
   // [FIXME] Assign uniq SSID
   Ssid ssid = Ssid ("wifi-stap-default");
   wifi.SetRemoteStationManager ("ns3::ArfWifiManager");
+
+  // setup AP
+  wifiMac.SetType ("ns3::ApWifiMac",
+      "Ssid", SsidValue (ssid));
+  netDevs.Add(wifi.Install (wifiPhy, wifiMac, ap));
   
   // setup STAs
   wifiMac.SetType ("ns3::StaWifiMac",
       "ActiveProbing", BooleanValue (true),
       "Ssid", SsidValue (ssid));
-  staDevs = wifi.Install (wifiPhy, wifiMac, stas);
+  netDevs.Add(wifi.Install (wifiPhy, wifiMac, stas));
 
-  // setup AP
-  wifiMac.SetType ("ns3::ApWifiMac",
-      "Ssid", SsidValue (ssid));
-  wifi.Install (wifiPhy, wifiMac, ap);
-
-  return staDevs;
+  return netDevs;
 }
 
 // configuration
