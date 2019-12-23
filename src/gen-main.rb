@@ -33,8 +33,9 @@ class EntryFileGenerator
       #include "ns3/bridge-module.h"
       #include "ns3/csma-module.h"
       #include "ns3/applications-module.h"
-      #include "ns3/internet-apps-module.h"
       #include "ns3/internet-module.h"
+      #include "ns3/internet-apps-module.h"
+      #include "ns3/netanim-module.h"
       using namespace ns3;
       NS_LOG_COMPONENT_DEFINE ("#{"TgimExample"}");
     CXX
@@ -53,6 +54,11 @@ class EntryFileGenerator
     main_func += <<~CXX
       int main (int argc, char *argv[])
       {
+    CXX
+
+    #   - Enable global routing(optional)
+    main_func += <<~CXX
+      Config::SetDefault ("ns3::Ipv4GlobalRouting::RespondToInterfaceEvents", BooleanValue (true));
     CXX
 
     #   - parse command line arguments (optional)
@@ -78,6 +84,10 @@ class EntryFileGenerator
     #   - set logging (optional)
     main_func += <<~CXX
       // logging here
+
+      // NetAnim
+      std::string animFile = "log/animation.xml";
+      AnimationInterface anim (animFile);
     CXX
     #   - simulator ready
     main_func += <<~CXX

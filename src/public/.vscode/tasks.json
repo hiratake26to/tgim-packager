@@ -1,0 +1,20 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "tgim-pack build",
+            "type": "shell",
+            "command": "tgim-pack build",
+            "group": "test"
+        },
+        {
+            "label": "tgim-pack run",
+            "type": "shell",
+            "command": "tgim-pack run",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}

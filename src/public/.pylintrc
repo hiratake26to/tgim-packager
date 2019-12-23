@@ -1,0 +1,5 @@
+[MASTER]
+disable=wildcard-import,
+        unused-wildcard-import,
+        invalid-name,
+        missing-module-docstring

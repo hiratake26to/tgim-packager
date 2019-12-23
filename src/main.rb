@@ -35,6 +35,8 @@ class TgimPackCli < Thor
   desc 'new <path>', 'Create new projcet into path, and current directory set to ns-3 root directory'
   method_option :ns3dir, :type => :string, :desc => "ns-3 directory root", :default => Dir.pwd
   def new(path)
+    # path is relative
+
     waff='waff'
     ns3dir=options[:ns3dir]
 
@@ -50,7 +52,9 @@ class TgimPackCli < Thor
     puts "temporary: #{tmpdir}"
     Dir.chdir(tmpdir)
 
-    puts "Create project"
+    output_path = File.join(orgdir, path)
+    project_name = File.basename(output_path)
+    puts "Create project: #{project_name}"
 
     puts "==> Generate: #{path}/#{waff}"
     File.open(waff, 'w') do |f|
@@ -59,10 +63,18 @@ class TgimPackCli < Thor
 
         NS3DIR="#{ns3dir}"
 
-        CWD="$PWD/build"
+        CWD="$PWD"
         cd $NS3DIR > /dev/null
         ./waf --cwd="$CWD" $*
+        WAF_STAT=$?
         cd - > /dev/null
+
+        if [ ${WAF_STAT} -ne 0 ]; then
+          echo "[waff] Execute waf is failed!"
+          exit 1
+        fi
+
+        exit 0
       SHELL
     end
     FileUtils.chmod('u+x', waff)
@@ -81,13 +93,13 @@ class TgimPackCli < Thor
 
           # Topology:
           #
-          # term0      sw                term0  
+          # term0      sw                term1
           #┌──────┐   ┌─────────────┐   ┌──────┐
           #│  port┠───┨port0   port1┠───┨  port│
           #└──────┘   └─────────────┘   └──────┘
           #
           # Application schedule:
-          # 
+          #
           # term0:
           #   SimReady -> Aft At 1-second -> Ping to term1
           #
@@ -95,9 +107,9 @@ class TgimPackCli < Thor
           #   SimReady -> Sink
 
           ## create box
-          term0 = BasicTerminal.Fork("term0").SetPoint(Point(0,0))
-          term1 = BasicTerminal.Fork("term1").SetPoint(Point(10,0))
-          sw = GenSwitch(2).Fork("sw").SetPoint(Point(5,0))
+          term0 = BasicTerminal.Fork("term0").Set(Point(10, 10))
+          term1 = BasicTerminal.Fork("term1").Set(Point(30, 10))
+          sw = GenSwitch(2).Fork("sw").Set(Point(20, 10))
 
           ## connect
           term0.ConnectPort("port", sw, "port0")
@@ -106,7 +118,7 @@ class TgimPackCli < Thor
           ## schedule
           (term0.Sdl()
             .At(Sig("SimReady")).Aft().At(1)
-            .Do("Ping", {"dhost": "${_Bterm1_Nn0}", "dport": 8080})
+            .Do("Ping", {"dhost": term1.AsHost(), "dport": 8080})
             )
           (term1.Sdl()
             .At(Sig("SimReady"))
@@ -114,10 +126,7 @@ class TgimPackCli < Thor
             )
 
           ## build
-          Builder.AddBox([term0, term1, sw])
-          result = Builder.Build()
-          with open('tgim-main.json', 'w') as f:
-            f.write(Builder.Build())
+          BuildBox([term0, term1, sw]).Build()
         PYTHON
       end
       
@@ -125,24 +134,46 @@ class TgimPackCli < Thor
       Dir.chdir('../')
     end
 
-    puts "==> Generate: #{path}/build/"
-    Dir.mkdir('build')
+    list_mkdir = [
+      'build',
+      'log/ascii',
+      'log/pcap',
+    ]
+    for item in list_mkdir do
+      puts "==> Generate: #{path}/#{item}/"
+      FileUtils.mkdir_p(item)
+    end
 
     puts "==> tgim-pack init"
     self.init
 
     puts "==> tgim-pack config"
-    self.config 'project', path
+    self.config 'project', project_name
     self.config 'entry',  'tgim-main.json'
     self.config 'output', 'build'
     self.config 'loader', 'tgim-generator'
     self.config 'target', 'ns-3'
     self.config 'target-dir', ns3dir
 
+    puts "==> create path to project directory"
+    begin
+      dir = File.dirname(output_path)
+      puts dir
+      FileUtils.mkdir_p(dir)
+    end
+
     puts "==> move file"
     Dir.chdir(orgdir)
-    puts "#{tmpdir} -> #{path}"
-    FileUtils.mv(tmpdir, path)
+    puts "#{tmpdir} -> #{output_path}"
+    FileUtils.mv(tmpdir, output_path)
+    puts("Copying public files")
+    begin
+      files = Dir.glob(
+        File.join(PUBLIC_PATH, "*"), File::FNM_DOTMATCH).reject{|e|
+          [".",".."].any?{|s| s== File::basename(e) }
+        }
+      FileUtils.cp_r(files, output_path)
+    end
 
     puts "\nFinish!"
   end
@@ -191,21 +222,29 @@ class TgimPackCli < Thor
   end
 
   desc 'run', 'Run ns-3 script'
+  method_option :nobuild, :type => :boolean, :desc => "no build, run ./build"
   def run_
-    puts "===> build"
-    self.build
+    if not options[:nobuild] then
+      puts "===> build"
+      self.build
+    end
+
     project = self.config('project')
     ns3dir = self.config('target-dir')
     ns3scratch = ns3dir + '/scratch'
 
     puts "===> files copy"
-    FileUtils.mkdir_p("#{ns3scratch}/#{project}")
+    outdir = "#{ns3scratch}/#{project}"
+    FileUtils.mkdir_p(outdir)
     files = Dir.glob("build/*")
-    p files ,"#{ns3scratch}/#{project}"
-    FileUtils.cp(files, "#{ns3scratch}/#{project}")
+    puts files
+    puts outdir
+    FileUtils.cp(files, outdir)
     
     puts "===> waff"
-    o,e,s = Open3.capture3("./waff --run \"#{project}\" --vis")
+    cmd = "./waff --run \"scratch/#{project}/#{project}\" --vis"
+    puts cmd
+    o,e,s = Open3.capture3(cmd)
     puts o,e
     if (not s.success?) then
       puts "ERROR!"
