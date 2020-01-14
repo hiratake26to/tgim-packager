@@ -35,7 +35,8 @@ class TgimPackCli < Thor
   desc 'new <path>', 'Create new projcet into path, and current directory set to ns-3 root directory'
   method_option :ns3dir, :type => :string, :desc => "ns-3 directory root", :default => Dir.pwd
   def new(path)
-    # path is relative
+    path = File.expand_path(path)
+    # path is absolute
 
     waff='waff'
     ns3dir=options[:ns3dir]
@@ -52,8 +53,9 @@ class TgimPackCli < Thor
     puts "temporary: #{tmpdir}"
     Dir.chdir(tmpdir)
 
-    output_path = File.join(orgdir, path)
-    project_name = File.basename(output_path)
+    #output_path = File.join(orgdir, path)
+    #project_name = File.basename(output_path)
+    project_name = File.basename(path)
     puts "Create project: #{project_name}"
 
     puts "==> Generate: #{path}/#{waff}"
@@ -157,22 +159,22 @@ class TgimPackCli < Thor
 
     puts "==> create path to project directory"
     begin
-      dir = File.dirname(output_path)
+      dir = File.dirname(path)
       puts dir
       FileUtils.mkdir_p(dir)
     end
 
     puts "==> move file"
     Dir.chdir(orgdir)
-    puts "#{tmpdir} -> #{output_path}"
-    FileUtils.mv(tmpdir, output_path)
+    puts "#{tmpdir} -> #{path}"
+    FileUtils.mv(tmpdir, path)
     puts("Copying public files")
     begin
       files = Dir.glob(
         File.join(PUBLIC_PATH, "*"), File::FNM_DOTMATCH).reject{|e|
           [".",".."].any?{|s| s== File::basename(e) }
         }
-      FileUtils.cp_r(files, output_path)
+      FileUtils.cp_r(files, path)
     end
 
     puts "\nFinish!"
