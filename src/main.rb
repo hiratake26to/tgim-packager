@@ -246,8 +246,8 @@ class TgimPackCli < Thor
     puts "===> waff"
     cmd = "./waff --run \"scratch/#{project}/#{project}\" --vis"
     puts cmd
-    o,e,s = Open3.capture3(cmd)
-    puts o,e
+    pid = spawn(cmd)
+    code, s = Process.wait2(pid)
     if (not s.success?) then
       puts "ERROR!"
       exit(1)
