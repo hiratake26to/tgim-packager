@@ -1,3 +1,7 @@
+# Copyright (c) 2019 hiratake26to. All rights reserved.
+# 
+# This work is licensed under the terms of the MIT license.  
+# For a copy, see <https://opensource.org/licenses/MIT>.
 class EntryFileGenerator
   def initialize
     @sim_stop = 30.0

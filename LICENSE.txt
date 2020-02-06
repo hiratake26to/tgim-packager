@@ -1,28 +1,3 @@
-# tgim-packager
-
-## Rule
-
-Config file default is `tgim-pack.config.json`.
-Directory with the config file is referred to as 'working directory'.
-
-Searching path for Entry-file is the same as working directory.
-
-Generator execute path is the same as Entry-file path.
-
-## Usage
-
-1. Run `./tgim-pack init` command, it is generating `tgim-pack.config.json`
-2. Edit `tgim-pack.config.json`
-3. Run `./tgim-pack pack` command, so packaging
-
-## Dependencies
-
-- indent (C++ formatter)
-  you can change this from `./src/config.rb`
-
-LICENSE
--------
-
 The MIT License
 
 Copyright 2019 hiratake26to
